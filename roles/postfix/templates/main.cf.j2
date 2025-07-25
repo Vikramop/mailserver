@@ -1,0 +1,37 @@
+# Postfix main configuration file
+
+# Make Postfix pass the authenticated SASL username in policy requests
+smtpd_sasl_authenticated_header = yes
+
+
+myhostname = {{ myhostname }}
+mydomain = {{ mydomain }}
+myorigin = {{ myorigin }}
+mydestination = localhost, {{ myhostname }}, {{ mydomain }}
+relayhost = {{ smtp_relay_host }}
+inet_interfaces = all
+inet_protocols = all
+
+smtp_tls_security_level = may
+smtp_tls_CAfile = /etc/ssl/certs/ca-certificates.crt
+
+
+smtp_sasl_auth_enable = yes
+smtp_sasl_password_maps = hash:/etc/postfix/sasl_passwd
+smtp_sasl_security_options = noanonymous
+smtp_sasl_tls_security_options = noanonymous
+smtpd_banner = $myhostname ESMTP
+smtpd_recipient_restrictions = 
+    permit_mynetworks,
+    permit_sasl_authenticated,
+    check_policy_service inet:127.0.0.1:10040,
+    reject_unauth_destination
+smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination
+
+smtp_use_tls = yes
+smtp_tls_note_starttls_offer = yes
+
+mynetworks = 127.0.0.0/8
+compatibility_level = 3.6
+
+alias_maps = hash:/etc/aliases

@@ -1,0 +1,6 @@
+---
+- hosts: mail
+  become: true
+
+  roles:
+    - dovecot

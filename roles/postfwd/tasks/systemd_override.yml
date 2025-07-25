@@ -1,0 +1,14 @@
+- name: Create systemd override for postfwd
+  copy:
+    dest: /etc/systemd/system/postfwd.service.d/override.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/sbin/postfwd2 -d -v --logstderr -i 127.0.0.1 -p 10040 -f /etc/postfwd.cf
+  notify: Restart postfwd
+  tags: postfwd
+
+- name: Reload systemd after override
+  command: systemctl daemon-reload
+  become: true
+  tags: postfwd

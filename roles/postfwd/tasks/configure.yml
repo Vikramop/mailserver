@@ -1,0 +1,74 @@
+---
+- name: Kill any running postfwd2 processes
+  ansible.builtin.shell: |
+    pkill -9 postfwd2 || true
+  ignore_errors: yes
+  tags: postfwd
+
+- name: Remove stale postfwd pid and socket files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/tmp/postfwd2-cache.socket
+    - /var/tmp/postfwd2-master.pid
+    - /run/postfwd2.pid
+  tags: postfwd
+
+- name: Install postfwd
+  apt:
+    name: postfwd
+    state: present
+  tags: postfwd
+
+- name: Create postfwd config from template
+  template:
+    src: postfwd.cf.j2
+    dest: /etc/postfwd.cf
+    mode: '0644'
+  notify: Restart postfwd
+  tags: postfwd
+
+- name: Ensure postfwd is running
+  systemd:
+    name: postfwd
+    enabled: true
+    state: started
+  tags: postfwd
+
+- name: Configure Postfix to use postfwd policy
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^smtpd_recipient_restrictions ='
+    line: >-
+      smtpd_recipient_restrictions = permit_mynetworks, permit_sasl_authenticated, check_policy_service inet:127.0.0.1:10040, reject_unauth_destination
+  tags: postfwd
+
+- name: Enable smtpd_sasl_authenticated_header
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^smtpd_sasl_authenticated_header ='
+    line: 'smtpd_sasl_authenticated_header = yes'
+  notify: Restart Postfix
+  tags:
+    - postfwd
+    - postfix
+
+- name: Ensure systemd override directory exists
+  file:
+    path: /etc/systemd/system/postfwd.service.d
+    state: directory
+    mode: '0755'
+  tags: postfwd
+
+- name: Create systemd override for postfwd
+  copy:
+    dest: /etc/systemd/system/postfwd.service.d/override.conf
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/sbin/postfwd2 -d -i 127.0.0.1 -p 10040 -f /etc/postfwd.cf
+  notify:
+    - Restart postfwd
+    - Reload Postfix
+  tags: postfwd

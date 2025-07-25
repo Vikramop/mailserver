@@ -1,0 +1,13 @@
+# /etc/dovecot/dovecot.conf
+
+disable_plaintext_auth = no
+log_path = /var/log/dovecot.log
+info_log_path = /var/log/dovecot-info.log
+log_timestamp = "%Y-%m-%d %H:%M:%S "
+ssl = required
+ssl_cert = </etc/letsencrypt/live/147258.info/fullchain.pem
+ssl_key = </etc/letsencrypt/live/147258.info/privkey.pem
+protocols = imap pop3 lmtp
+
+!include conf.d/*.conf
+!include_try local.conf

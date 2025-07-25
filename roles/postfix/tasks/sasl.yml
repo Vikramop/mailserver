@@ -1,0 +1,13 @@
+- name: Enable SASL authentication in Postfix
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^{{ item.key }} ='
+    line: '{{ item.key }} = {{ item.value }}'
+  with_items:
+    - { key: smtpd_sasl_type, value: dovecot }
+    - { key: smtpd_sasl_path, value: private/auth }
+    - { key: smtpd_sasl_auth_enable, value: 'yes' }
+    - { key: smtpd_sasl_security_options, value: noanonymous }
+    - { key: broken_sasl_auth_clients, value: 'yes' }
+    - { key: smtpd_recipient_restrictions, value: permit_sasl_authenticated,reject_unauth_destination }
+  tags: postfix

@@ -1,0 +1,13 @@
+---
+domain_name: 147258.info
+selector_name: mail        
+
+
+postfix_tls_cert_file: /etc/letsencrypt/live/147258.info/fullchain.pem
+postfix_tls_key_file: /etc/letsencrypt/live/147258.info/privkey.pem
+postfix_tls_dhparam_file: /etc/ssl/certs/dhparam.pem
+
+staff_users:
+  - alice
+  - bob
+  - charlie

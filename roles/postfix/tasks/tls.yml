@@ -1,0 +1,20 @@
+- name: Enable TLS and security in Postfix
+  lineinfile:
+    path: /etc/postfix/main.cf
+    regexp: '^{{ item.key }} ='
+    line: '{{ item.key }} = {{ item.value }}'
+  with_items:
+    - { key: smtpd_tls_cert_file, value: "{{ postfix_tls_cert_file }}" }
+    - { key: smtpd_tls_key_file, value: "{{ postfix_tls_key_file }}" }
+    - { key: smtpd_use_tls, value: 'yes' }
+    - { key: smtpd_tls_auth_only, value: 'yes' }
+    - { key: smtpd_tls_security_level, value: may }
+    - { key: smtp_tls_security_level, value: encrypt }
+    - { key: smtpd_tls_loglevel, value: 1 }
+    - { key: smtpd_tls_received_header, value: 'yes' }
+    - { key: tls_preempt_cipherlist, value: 'yes' }
+    - { key: smtp_tls_CAfile, value: /etc/ssl/certs/ca-certificates.crt }
+    - { key: smtpd_tls_protocols, value: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1, TLSv1.2, TLSv1.3" }
+    - { key: smtpd_tls_mandatory_protocols, value: "!SSLv2, !SSLv3, !TLSv1, !TLSv1.1, TLSv1.2, TLSv1.3" }
+
+  tags: postfix

@@ -1,0 +1,78 @@
+---
+- name: Install OpenDKIM and dependencies
+  apt:
+    name:
+      - opendkim
+      - opendkim-tools
+    state: present
+  tags: opendkim
+
+- name: Create DKIM directory
+  file:
+    path: /etc/opendkim/keys/{{ domain_name }}
+    state: directory
+    owner: opendkim
+    group: opendkim
+    mode: '0750'
+  tags: opendkim
+
+- name: Generate DKIM keys if not present
+  command: >
+    opendkim-genkey -D /etc/opendkim/keys/{{ domain_name }}
+    -d {{ domain_name }}
+    -s mail
+  args:
+    creates: /etc/opendkim/keys/{{ domain_name }}/mail.private
+  tags: opendkim
+
+- name: Set permissions for private key
+  file:
+    path: /etc/opendkim/keys/{{ domain_name }}/mail.private
+    owner: opendkim
+    group: opendkim
+    mode: '0600'
+  tags: opendkim
+
+- name: Ensure KeyTable entry exists
+  lineinfile:
+    path: /etc/opendkim/KeyTable
+    create: yes
+    line: "mail._domainkey.{{ domain_name }} {{ domain_name }}:mail:/etc/opendkim/keys/{{ domain_name }}/mail.private"
+  tags: opendkim
+
+- name: Ensure SigningTable entry exists
+  lineinfile:
+    path: /etc/opendkim/SigningTable
+    create: yes
+    line: "*@{{ domain_name }} mail._domainkey.{{ domain_name }}"
+  tags: opendkim
+
+- name: Ensure TrustedHosts entry exists
+  lineinfile:
+    path: /etc/opendkim/TrustedHosts
+    create: yes
+    line: "127.0.0.1"
+  tags: opendkim
+
+- name: Show DKIM public TXT record (for DNS)
+  command: cat /etc/opendkim/keys/{{ domain_name }}/mail.txt
+  register: dkim_dns_txt
+  changed_when: false
+  tags: show_dkim
+
+- name: Print DKIM public TXT record
+  debug:
+    msg: "{{ dkim_dns_txt.stdout }}"
+  tags: show_dkim
+
+- name: Validate DKIM TXT record via dig
+  shell: dig +short TXT mail._domainkey.{{ domain_name }}
+  register: dig_output
+  changed_when: false
+  tags: check_dkim_record
+
+- name: Check if DKIM TXT record matches expected value
+  fail:
+    msg: "❌ DKIM TXT record is not set or incorrect for mail._domainkey.{{ domain_name }}"
+  when: "'v=DKIM1' not in dig_output.stdout"
+  tags: check_dkim_record

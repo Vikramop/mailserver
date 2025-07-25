@@ -1,0 +1,7 @@
+- name: Copy TLS config for Dovecot
+  template:
+    src: 10-ssl.conf.j2
+    dest: /etc/dovecot/conf.d/10-ssl.conf
+    mode: 0644
+  notify: Restart Dovecot
+  tags: dovecot

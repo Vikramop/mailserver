@@ -1,0 +1,10 @@
+---
+- name: Restart postfwd
+  systemd:
+    name: postfwd
+    state: restarted
+
+- name: Reload Postfix
+  service:
+    name: postfix
+    state: reloaded

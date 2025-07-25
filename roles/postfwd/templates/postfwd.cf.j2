@@ -1,0 +1,18 @@
+{% for user in staff_users %}
+id=rate_limit_minute_{{ user }}
+  sasl_username=={{ user }}@{{ domain_name }}
+  action=rate(sasl_username/60/2/REJECT 5.7.1 Rate limit: max 2 emails per minute for {{ user }})
+
+id=rate_limit_daily_{{ user }}
+  sasl_username=={{ user }}@{{ domain_name }}
+  action=rate(sasl_username/86400/20/REJECT 5.7.1 Daily email quota exceeded for {{ user }})
+
+id=rate_limit_monthly_{{ user }}
+  sasl_username=={{ user }}@{{ domain_name }}
+  action=rate(sasl_username/2592000/260/REJECT 5.7.1 Monthly email quota exceeded for {{ user }})
+
+{% endfor %}
+
+option cache_type=mem
+option cache_ttl=86400
+option safe_unknown_key = yes

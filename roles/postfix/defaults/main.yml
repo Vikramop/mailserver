@@ -1,0 +1,7 @@
+myhostname: "147258.info"
+mydomain: "147258.info"
+myorigin: "$mydomain"
+
+smtp_relay_host: "[in-v3.mailjet.com]:587"
+smtp_sasl_user: "3ba6e963b157a512702efd6902eb3332"
+smtp_sasl_pass: "15f7e6f8138343aaf03d23976ebbad4b"

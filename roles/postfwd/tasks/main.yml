@@ -1,0 +1,8 @@
+---
+- name: Include postfwd install and config tasks
+  import_tasks: configure.yml
+  tags: postfwd
+
+- name: Include postfwd systemd override (custom daemon launch)
+  import_tasks: systemd_override.yml
+  tags: postfwd

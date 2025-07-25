@@ -1,0 +1,68 @@
+- name: Install Postfix
+  apt:
+    name: postfix
+    state: present
+  tags: [postfix, install]
+
+- name: Copy Postfix main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Postfix
+  tags: [postfix, config]
+
+- name: Copy Postfix master.cf
+  template:
+    src: master.cf.j2
+    dest: /etc/postfix/master.cf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Postfix
+  tags: [postfix, config]
+
+- name: Set up SASL authentication
+  copy:
+    src: sasl_passwd
+    dest: /etc/postfix/sasl_passwd
+    owner: root
+    group: root
+    mode: '0600'
+  tags: [postfix, sasl]
+
+- name: Postmap SASL credentials
+  command: postmap /etc/postfix/sasl_passwd
+  tags: [postfix, sasl]
+
+- name: Ensure postfix is started and enabled
+  service:
+    name: postfix
+    state: started
+    enabled: yes
+  tags: [postfix, service]
+
+- name: Configure Postfix main.cf
+  template:
+    src: main.cf.j2
+    dest: /etc/postfix/main.cf
+  notify: Restart Postfix
+
+- name: Ensure 'smtp unix' line exists in postfix master.cf
+  lineinfile:
+    path: /etc/postfix/master.cf
+    line: 'smtp      unix  -       -       y       -       -       smtp'
+    state: present
+    insertafter: '^#?smtp\s+inet' 
+    create: no
+  notify: Restart Postfix
+  tags: [postfix, mastercf]
+
+
+- include_tasks: sasl.yml
+  tags: postfix
+
+- include_tasks: tls.yml
+  tags: postfix

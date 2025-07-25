@@ -1,0 +1,64 @@
+- name: Install Dovecot packages
+  apt:
+    name:
+      - dovecot-core
+      - dovecot-imapd
+      - dovecot-pop3d
+      - dovecot-lmtpd
+    state: present
+  tags: [dovecot, install]
+
+- name: Copy Dovecot main config
+  template:
+    src: dovecot.conf.j2
+    dest: /etc/dovecot/dovecot.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Dovecot
+  tags: [dovecot, config]
+
+- name: Copy Dovecot authentication config
+  template:
+    src: 10-auth.conf.j2
+    dest: /etc/dovecot/conf.d/10-auth.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Dovecot
+  tags: [dovecot, config]
+
+- name: Copy Dovecot mailbox config
+  template:
+    src: 10-mail.conf.j2
+    dest: /etc/dovecot/conf.d/10-mail.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Dovecot
+  tags: [dovecot, config]
+
+- name: Copy Dovecot SSL config
+  template:
+    src: 10-ssl.conf.j2
+    dest: /etc/dovecot/conf.d/10-ssl.conf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: Restart Dovecot
+  tags: [dovecot, config, ssl]
+
+- name: Ensure Dovecot is running and enabled
+  service:
+    name: dovecot
+    state: started
+    enabled: yes
+  tags: [dovecot, service]
+
+- name: Configure Dovecot master services for Postfix SASL
+  template:
+    src: 10-master.conf.j2
+    dest: /etc/dovecot/conf.d/10-master.conf
+    mode: 0644
+  notify: Restart Dovecot
+  tags: dovecot
